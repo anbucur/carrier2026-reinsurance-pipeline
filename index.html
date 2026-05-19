@@ -639,9 +639,9 @@ function App() {
             <h2 className="text-lg font-bold text-md-on-surface mb-6 flex items-center gap-2"><Layers size={22} className="text-md-primary"/> Policy Hierarchy &mdash; {setup.name}</h2>
 
             {/* ROOT: Master Policy */}
-            <div className="border-2 rounded-xl p-5 bg-md-primary-bright/10 border-md-primary-bright/30 mb-2">
+            <div className="border-2 rounded-xl p-5 bg-md-surface-high border-[rgba(255,255,255,0.08)] mb-2">
               <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-md-primary text-base flex items-center gap-2"><Layers size={18}/> Master Policy</span>
+                <span className="font-bold text-md-on-surface text-base flex items-center gap-2"><Layers size={18}/> Master Policy</span>
                 <PolicyIdTag id={setup.masterPolicyId} size="lg"/>
               </div>
               <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {(() => { const lf = setup.leadFee || {}; return lf.mode === 'fixed' ? `\u20AC${lf.value} ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${lf.value}% ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}`; })()} &middot; Ceding Fee: {setup.cedingFeePct}%</div>
@@ -697,7 +697,7 @@ function App() {
                     const isTarget = sim.countryId === front.id;
                     return (
                       <div key={front.id} className="tree-leaf">
-                        <div className={`border-2 rounded-xl p-4 ${isTarget && sim.phase !== 'IDLE' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-md-primary-bright/10 border-md-primary-bright/20'}`}>
+                        <div className={`border-2 rounded-xl p-4 ${isTarget && sim.phase !== 'IDLE' ? 'bg-md-surface-high border-[rgba(255,255,255,0.12)]' : 'bg-md-surface-high border-[rgba(255,255,255,0.06)]'}`}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Globe size={14}/> {front.country}</span>
                             <PolicyIdTag id={front.inwardId}/>
