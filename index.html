@@ -34,6 +34,7 @@ tailwind.config = {
   .pulse-glow-green { box-shadow: 0 0 24px 4px rgba(16,185,129,0.35); border-color: #10b981 !important; }
   .pulse-glow-red { box-shadow: 0 0 24px 4px rgba(239,68,68,0.35); border-color: #ef4444 !important; }
   .pulse-glow-blue { box-shadow: 0 0 24px 4px rgba(66,133,244,0.35); border-color: #4285f4 !important; }
+  .pulse-glow-teal { box-shadow: 0 0 24px 4px rgba(20,184,166,0.35); border-color: #14b8a6 !important; }
   .dimmed-inactive { opacity: 0.25; filter: grayscale(80%); transition: all 0.5s ease; }
   .active-pop { opacity: 1; filter: grayscale(0%); transform: scale(1.02); transition: all 0.3s ease; z-index: 20; }
   body { background: #0A0A0A; color: #e5e2e1; }
@@ -73,7 +74,7 @@ const STORAGE_KEY = 'carrier2026-setups-v2';
 
 const DEFAULT_SETUPS = [{
   id: 'default',
-  name: '2-Insurer (Asia)',
+  name: '3-Insurer (Asia)',
   carrierName: 'CARRIER 2026',
   masterPolicyId: 'MP-GLOBAL-2026',
   leadFee: { mode: 'percentage', frequency: 'repeating', value: 5 },
@@ -81,8 +82,9 @@ const DEFAULT_SETUPS = [{
   minCedingFee: 100,
   leadInsurerId: 'INS-A',
   insurers: [
-    { id: 'INS-A', name: 'MSM', share: 60 },
-    { id: 'INS-B', name: 'Insurer B', share: 40 },
+    { id: 'INS-A', name: 'MSM', share: 40 },
+    { id: 'INS-B', name: 'Swiss Re', share: 35 },
+    { id: 'INS-C', name: 'Munich Re', share: 25 },
   ],
   localFronts: [
     { id: 'FRONT-CHN', country: 'China', name: 'PICC P&C', inwardId: 'INW-CHN-001' },
@@ -205,7 +207,8 @@ function App() {
     const gross = parseFloat(simConfig.amount);
     if (isNaN(gross) || gross <= 0) return;
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
-    const lf = setup.leadFee || { mode: 'percentage', frequency: 'repeating', value: 0 };
+    const lfFallback = { mode: 'percentage', frequency: 'repeating', value: 5 };
+  const lf = { ...lfFallback, ...(setup.leadFee || {}) };
     if (simConfig.type === 'PREMIUM') {
       leadFeeAmt = lf.mode === 'percentage' ? gross * (lf.value / 100) : lf.value;
       const alreadyChargedOnce = lf.frequency === 'once' && ledgers.some(tx => tx.inwardId === simConfig.countryId && tx.mgaFee > 0);
@@ -244,6 +247,25 @@ function App() {
   const leadIns = setup.insurers.find(i => i.id === (setup.leadInsurerId || setup.insurers[0]?.id)) || setup.insurers[0];
   const coInsurers = setup.insurers.filter(i => i.id !== leadIns.id);
 
+  const ledgerTotals = (() => {
+    let masterGross = 0, masterCeding = 0, masterLeadFee = 0, masterNet = 0;
+    const byFront = {}, byInsurer = {};
+    setup.localFronts.forEach(f => { byFront[f.id] = { gross: 0, ceding: 0 }; });
+    setup.insurers.forEach(ins => { byInsurer[ins.id] = { amount: 0, leadFee: 0, total: 0 }; });
+    ledgers.forEach(tx => {
+      masterGross += tx.gross || 0;
+      masterCeding += tx.cedingFee || 0;
+      masterLeadFee += tx.mgaFee || 0;
+      masterNet += tx.net || 0;
+      const front = setup.localFronts.find(f => f.inwardId === tx.inwardId || f.country === tx.country);
+      if (front && byFront[front.id]) { byFront[front.id].gross += tx.gross || 0; byFront[front.id].ceding += tx.cedingFee || 0; }
+      (tx.insurerResults || []).forEach(ir => {
+        if (byInsurer[ir.id]) { byInsurer[ir.id].amount += ir.amount || 0; byInsurer[ir.id].leadFee += ir.isLead ? (tx.mgaFee || 0) : 0; byInsurer[ir.id].total += ir.total || 0; }
+      });
+    });
+    return { masterGross, masterCeding, masterLeadFee, masterNet, byFront, byInsurer };
+  })();
+
   const tabs = [
     { id: 'pipeline', label: 'Pipeline', icon: <Play size={18}/> },
     { id: 'hierarchy', label: 'Hierarchy', icon: <Layers size={18}/> },
@@ -260,7 +282,7 @@ function App() {
             <div className="flex items-center gap-3">
               <div className="bg-md-surface-high p-3 rounded-xl border border-[rgba(255,255,255,0.08)]"><Layers size={28} className="text-md-primary"/></div>
               <div>
-                <h1 className="text-xl font-extrabold text-md-on-surface">GIP &mdash; Master Policy</h1>
+                <h1 className="text-xl font-extrabold text-md-on-surface">Master Program</h1>
                 <div className="text-[11px] text-md-on-surface-variant font-medium">{setup.masterPolicyId}</div>
               </div>
             </div>
@@ -318,21 +340,21 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className={LABEL}>Mode</label>
-                    <select className={INPUT} value={(setup.leadFee || {}).mode || 'percentage'} onChange={e => updateSetup('leadFee', { ...(setup.leadFee || {}), mode: e.target.value })}>
+                    <select className={INPUT} value={(setup.leadFee || {}).mode || 'percentage'} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), mode: e.target.value })}>
                       <option value="percentage">Percentage (%)</option>
                       <option value="fixed">Fixed Amount (EUR)</option>
                     </select>
                   </div>
                   <div>
                     <label className={LABEL}>Frequency</label>
-                    <select className={INPUT} value={(setup.leadFee || {}).frequency || 'repeating'} onChange={e => updateSetup('leadFee', { ...(setup.leadFee || {}), frequency: e.target.value })}>
+                    <select className={INPUT} value={(setup.leadFee || {}).frequency || 'repeating'} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), frequency: e.target.value })}>
                       <option value="repeating">Repeating (every txn)</option>
                       <option value="once">One-Time (per inward policy)</option>
                     </select>
                   </div>
                   <div>
                     <label className={LABEL}>{(setup.leadFee || {}).mode === 'fixed' ? 'Fixed Amount (EUR)' : 'Percentage (%)'}</label>
-                    <input type="number" className={INPUT} value={(setup.leadFee || {}).value || 0} onChange={e => updateSetup('leadFee', { ...(setup.leadFee || {}), value: Number(e.target.value) })}/>
+                    <input type="number" className={INPUT} value={(setup.leadFee || {}).value ?? 5} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), value: Number(e.target.value) })}/>
                   </div>
                 </div>
               </div>
@@ -479,8 +501,8 @@ function App() {
                       <div className="space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border border-[rgba(255,255,255,0.06)]">
                         <div className="flex justify-between text-md-on-surface-variant text-xs pb-1 border-b border-[rgba(255,255,255,0.06)]"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
                         {sim.type === 'PREMIUM' && (<>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-teal-500/15 text-teal-300 font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-warn/15 text-md-warn font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-orange-500/15 text-orange-300 font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-emerald-500/15 text-emerald-400 font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
                         </>)}
                         <div className="flex justify-between font-bold text-xs pt-1.5 border-t border-[rgba(255,255,255,0.08)] text-md-primary"><span>= Net Distributable:</span><span>{fmt(sim.math.net)}</span></div>
                       </div>
@@ -493,36 +515,30 @@ function App() {
                   <h3 className="text-center font-bold text-md-on-surface-variant uppercase tracking-[0.15em] text-[11px] mb-5">3. Distribution</h3>
 
                   {/* INSURERS */}
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-3 mb-5">
                     <div className="text-[10px] font-bold text-md-on-surface-variant uppercase tracking-wider text-center">Master Insurers</div>
-                    <div className="flex rounded-lg overflow-hidden h-5">
-                      {setup.insurers.map((ins, idx) => {
-                        const col = INS_COLORS[idx % INS_COLORS.length];
-                        const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
-                        return <div key={ins.id} className={`flex items-center justify-center text-[9px] font-bold ${col.badge}`} style={{width: `${ins.share}%`}}>{isLead && <Crown size={9} className="mr-0.5"/>}{ins.share}%</div>;
-                      })}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
                     {setup.insurers.map((ins, idx) => {
                       const col = INS_COLORS[idx % INS_COLORS.length];
                       const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
                       const outPol = !isLead ? outward.find(o => o.frontId === sim.countryId && o.insurerId === ins.id) : null;
                       const ir = sim.math.insurerResults?.find(r => r.id === ins.id);
                       return (
-                        <div key={ins.id} className={`border-2 rounded-lg p-2.5 relative transition-all ${col.bg} ${col.border} ${sim.phase === 'DISTRIBUTE' && showResults ? `active-pop ${getGlow(sim.type)}` : ''}`}>
-                          <div className="flex items-center justify-between">
-                            <span className={`font-bold text-xs ${col.accent} flex items-center gap-1`}>{isLead ? <Crown size={13}/> : <Building2 size={13}/>}{ins.name}</span>
-                            <div className="flex items-center gap-1.5">
-                              {isLead && <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">DIRECT</span>}
-                              {!isLead && outPol && <PolicyIdTag id={outPol.id}/>}
-                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${col.badge}`}>{ins.share}%</span>
-                            </div>
+                        <div key={ins.id} className={`border-2 rounded-xl p-4 relative transition-all ${col.bg} ${col.border} ${sim.phase === 'DISTRIBUTE' && showResults ? `active-pop ${getGlow(sim.type)}` : ''}`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`font-bold text-sm ${col.accent} flex items-center gap-1.5`}><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
+                            {outPol && <PolicyIdTag id={outPol.id}/>}
+                            {isLead && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Direct via {setup.masterPolicyId}</span>}
                           </div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded ${col.badge}`}>{ins.share}% Risk</span>
+                          </div>
+                          {isLead && (() => { const p = [{ role: 'Lead Reinsurer', name: ins.name }].concat(coInsurers.map(ci => ({ role: 'Co-insurer', name: ci.name }))); return <Parties parties={p}/>; })()}
+                          {!isLead && <Parties parties={[{ role: 'Retrocedant', name: leadIns.name }, { role: 'Retrocessionaire', name: ins.name }]}/>}
                           {showResults && ir && (
-                            <div className="mt-1 flex justify-between font-mono text-[10px] bg-md-surface/80 px-2 py-1 rounded border border-[rgba(255,255,255,0.06)]">
-                              <span className="text-md-on-surface-variant">Net:</span>
-                              <span className={`font-bold ${col.accent}`}>{fmt(ir.total)}</span>
+                            <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border border-[rgba(255,255,255,0.06)]">
+                              <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Risk Share:</span><span className="font-bold text-md-on-surface">{fmt(ir.amount)}</span></div>
+                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-emerald-400 text-xs"><span>Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
+                              <div className="flex justify-between font-bold text-xs pt-1 border-t border-[rgba(255,255,255,0.08)] text-md-on-surface"><span>Total:</span><span>{fmt(ir.total)}</span></div>
                             </div>
                           )}
                         </div>
@@ -538,21 +554,21 @@ function App() {
                       const activeNow = isTarget && showResults;
                       return (
                         <div key={front.id} className={`${!isTarget && sim.phase !== 'IDLE' ? 'dimmed-inactive' : ''}`}>
-                          <div className={`border-2 rounded-xl p-4 relative transition-all bg-teal-500/10 border-teal-500/20 ${activeNow && !isDone ? `active-pop ${getGlow(sim.type)}` : ''}`}>
+                           <div className={`border-2 rounded-xl p-4 relative transition-all bg-orange-500/10 border-orange-500/20 ${activeNow && !isDone ? `active-pop ${getGlow(sim.type)}` : ''}`}>
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-teal-300 text-sm flex items-center gap-1.5"><Globe size={14}/> {front.name}</span>
-                              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-teal-500/15 text-teal-300">{front.country}</span>
+                              <span className="font-bold text-orange-300 text-sm flex items-center gap-1.5"><Globe size={14}/> {front.name}</span>
+                              <span className="text-[10px] font-black px-2 py-0.5 rounded bg-orange-500/15 text-orange-300">{front.country}</span>
                             </div>
                             <div className="text-[11px] text-md-on-surface-variant font-medium mb-2">Local Front — Ceding Commission</div>
                             <Parties parties={[{ role: 'Ceding Co', name: front.name }, { role: 'Reinsured', name: leadIns.name }]}/>
                             {activeNow && sim.type === 'PREMIUM' && (
                               <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border border-[rgba(255,255,255,0.06)]">
-                                <div className="flex justify-between text-teal-300 text-xs"><span>Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                                <div className="flex justify-between text-orange-300 text-xs"><span>Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
                               </div>
                             )}
                             {activeNow && sim.type === 'CLAIM' && (
                               <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border border-[rgba(255,255,255,0.06)]">
-                                <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Ceding Fee:</span><span className="font-bold text-md-on-surface-variant">N/A</span></div>
+                                <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Ceding Fee:</span><span className="bold text-md-on-surface-variant">N/A</span></div>
                               </div>
                             )}
                           </div>
@@ -578,7 +594,7 @@ function App() {
                       <th className="px-4 py-3 text-md-on-surface-variant text-[11px] uppercase tracking-wider">Type</th>
                       <th className="px-4 py-3 text-md-on-surface-variant text-[11px] uppercase tracking-wider">Inward</th>
                       <th className="px-4 py-3 text-right text-md-on-surface-variant text-[11px] uppercase tracking-wider">Gross</th>
-                      <th className="px-4 py-3 text-right text-teal-400 text-[11px] uppercase tracking-wider">Ceding</th>
+                      <th className="px-4 py-3 text-right text-orange-400 text-[11px] uppercase tracking-wider">Ceding</th>
                       <th className="px-4 py-3 text-right text-md-warn text-[11px] uppercase tracking-wider">Lead</th>
                       {setup.insurers.map((ins, idx) => {
                         const col = INS_COLORS[idx % INS_COLORS.length];
@@ -601,8 +617,8 @@ function App() {
                           </td>
                           <td className="px-4 py-3 font-mono text-xs text-md-on-surface-variant">{tx.inwardId}</td>
                           <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(tx.gross)}</td>
-                          <td className="px-4 py-3 text-right font-bold font-mono bg-teal-500/5">{tx.cedingFee > 0 ? <span className="text-teal-300">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
-                          <td className="px-4 py-3 text-right font-bold font-mono bg-md-warn/5">{tx.mgaFee > 0 ? <span className="text-md-warn">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
+                          <td className="px-4 py-3 text-right font-bold font-mono bg-orange-500/5">{tx.cedingFee > 0 ? <span className="text-orange-300">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
+                          <td className="px-4 py-3 text-right font-bold font-mono bg-emerald-500/5">{tx.mgaFee > 0 ? <span className="text-emerald-400">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           {(tx.insurerResults || []).map((ir, idx) => {
                             const col = INS_COLORS[idx % INS_COLORS.length];
                             return <td key={ir.id} className={`px-4 py-3 text-right font-bold font-mono ${col.accent} bg-${col.accent.replace('text-','')}/5`}>{fmt(ir.total)}</td>;
@@ -629,6 +645,14 @@ function App() {
                 <PolicyIdTag id={setup.masterPolicyId} size="lg"/>
               </div>
               <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {(() => { const lf = setup.leadFee || {}; return lf.mode === 'fixed' ? `\u20AC${lf.value} ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${lf.value}% ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}`; })()} &middot; Ceding Fee: {setup.cedingFeePct}%</div>
+              {ledgers.length > 0 && (
+                <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding</div><div className="text-xs font-bold text-orange-300">{fmt(ledgerTotals.masterCeding)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-emerald-400">{fmt(ledgerTotals.masterLeadFee)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Net</div><div className="text-xs font-bold text-md-primary">{fmt(ledgerTotals.masterNet)}</div></div>
+                </div>
+              )}
               <Parties parties={[{ role: 'Lead Reinsurer', name: leadIns.name }, ...coInsurers.map(ci => ({ role: 'Co-insurer', name: ci.name }))]}/>
             </div>
 
@@ -652,13 +676,13 @@ function App() {
                           </div>
                           {isLead && (() => { const p = [{ role: 'Lead Reinsurer', name: ins.name }].concat(coInsurers.map(ci => ({ role: 'Co-insurer', name: ci.name }))); return <Parties parties={p}/>; })()}
                           {!isLead && <Parties parties={[{ role: 'Retrocedant', name: leadIns.name }, { role: 'Retrocessionaire', name: ins.name }]}/>}
-                          {ir && showResults && (
-                            <div className="mt-2 space-y-1 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
-                              <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Risk Share:</span><span className="font-bold text-md-on-surface">{fmt(ir.amount)}</span></div>
-                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-md-warn text-xs"><span>Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
-                              <div className={`flex justify-between font-bold text-xs pt-1 border-t border-[rgba(255,255,255,0.08)] ${col.accent}`}><span>Total Flow:</span><span>{fmt(ir.total)}</span></div>
+                          {ledgers.length > 0 && (() => { const lt = ledgerTotals.byInsurer[ins.id]; return (
+                            <div className="mt-2 grid grid-cols-3 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
+                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Risk Share</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.amount)}</div></div>
+                              {isLead && <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-emerald-400">{fmt(lt.leadFee)}</div></div>}
+                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Total</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.total)}</div></div>
                             </div>
-                          )}
+                          ); })()}
                         </div>
                       </div>
                     );
@@ -681,11 +705,12 @@ function App() {
                           </div>
                           <div className="text-[11px] text-md-on-surface-variant">{front.name}</div>
                           <Parties parties={[{ role: 'Ceding Co', name: front.name }, { role: 'Reinsured', name: leadIns.name }]}/>
-                          {isTarget && sim.phase !== 'IDLE' && (
-                            <div className="mt-2 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
-                              <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
+                          {ledgers.length > 0 && (() => { const lt = ledgerTotals.byFront[front.id]; return (
+                            <div className="mt-2 grid grid-cols-2 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
+                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.gross)}</div></div>
+                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding Fee</div><div className="text-xs font-bold text-orange-300">{fmt(lt.ceding)}</div></div>
                             </div>
-                          )}
+                          ); })()}
                         </div>
                       </div>
                     );
@@ -713,11 +738,11 @@ function App() {
                           </div>
                           <div className="text-[11px] text-md-on-surface-variant">{front?.country} &rarr; {ins?.name} ({ins?.share}%)</div>
                           <Parties parties={[{ role: 'Retrocedant', name: leadIns.name }, { role: 'Retrocessionaire', name: ins?.name || '' }]}/>
-                          {isActive && ir && (
+                          {ledgers.length > 0 && ins && (() => { const lt = ledgerTotals.byInsurer[ins.id]; return (
                             <div className="mt-1.5 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
-                              <div className={`flex justify-between font-bold text-xs ${col.accent}`}><span>Total:</span><span>{fmt(ir.total)}</span></div>
+                              <div className="flex justify-between font-bold text-xs text-md-on-surface"><span>Total:</span><span>{fmt(lt.amount)}</span></div>
                             </div>
-                          )}
+                          ); })()}
                         </div>
                       </div>
                     );
