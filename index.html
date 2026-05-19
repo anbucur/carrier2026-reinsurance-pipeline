@@ -204,8 +204,9 @@ function App() {
   const handleStartSim = (e) => {
     e.preventDefault();
     if (isAnimating || !sharesValid) return;
-    const gross = parseFloat(simConfig.amount);
-    if (isNaN(gross) || gross <= 0) return;
+    const rawAmount = parseFloat(simConfig.amount);
+    if (isNaN(rawAmount) || rawAmount <= 0) return;
+    const gross = simConfig.type === 'CLAIM' ? -rawAmount : rawAmount;
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
     const lfFallback = { mode: 'percentage', frequency: 'repeating', value: 5 };
   const lf = { ...lfFallback, ...(setup.leadFee || {}) };
