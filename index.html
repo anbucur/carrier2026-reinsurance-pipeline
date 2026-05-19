@@ -664,15 +664,14 @@ function App() {
                 <div className="text-[11px] font-bold text-md-on-surface-variant uppercase tracking-[0.15em] mb-3 flex items-center gap-2"><Building2 size={14}/> Insurers ({setup.insurers.length})</div>
                 <div className="tree-children">
                   {setup.insurers.map((ins, idx) => {
-                    const col = INS_COLORS[idx % INS_COLORS.length];
                     const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
                     const ir = sim.math.insurerResults?.find(r => r.id === ins.id);
                     return (
                       <div key={ins.id} className="tree-leaf">
-                        <div className={`border-2 rounded-xl p-4 ${col.bg} ${col.border}`}>
+                        <div className="border-2 rounded-xl p-4 bg-md-surface-high border-[rgba(255,255,255,0.08)]">
                           <div className="flex items-center justify-between mb-1">
-                            <span className={`font-bold text-sm ${col.accent} flex items-center gap-1.5`}><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
-                            <span className={`text-[10px] font-black px-2 py-0.5 rounded ${col.badge}`}>{ins.share}%</span>
+                            <span className="font-bold text-sm text-md-on-surface flex items-center gap-1.5"><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/20 text-md-primary">{ins.share}%</span>
                           </div>
                           {isLead && (() => { const p = [{ role: 'Lead Reinsurer', name: ins.name }].concat(coInsurers.map(ci => ({ role: 'Co-insurer', name: ci.name }))); return <Parties parties={p}/>; })()}
                           {!isLead && <Parties parties={[{ role: 'Retrocedant', name: leadIns.name }, { role: 'Retrocessionaire', name: ins.name }]}/>}
@@ -731,9 +730,9 @@ function App() {
                     const isActive = sim.countryId === op.frontId && showResults;
                     return (
                       <div key={op.id} className="tree-leaf">
-                        <div className={`border-2 rounded-xl p-3 ${isActive ? col.bg + ' ' + col.border : 'bg-md-surface-high border-[rgba(255,255,255,0.06)]'}`}>
+                        <div className={`border-2 rounded-xl p-3 ${isActive ? 'bg-md-surface-high border-md-primary/30' : 'bg-md-surface-high border-[rgba(255,255,255,0.06)]'}`}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className={`font-bold text-xs ${isActive ? col.accent : 'text-md-on-surface-variant'} flex items-center gap-1.5`}><FileText size={12}/> {op.id}</span>
+                            <span className={`font-bold text-xs ${isActive ? 'text-md-primary' : 'text-md-on-surface-variant'} flex items-center gap-1.5`}><FileText size={12}/> {op.id}</span>
                             <PolicyIdTag id={op.id}/>
                           </div>
                           <div className="text-[11px] text-md-on-surface-variant">{front?.country} &rarr; {ins?.name} ({ins?.share}%)</div>
