@@ -385,9 +385,9 @@ function App() {
                   const col = INS_COLORS[idx % INS_COLORS.length];
                   const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
                   return (
-                    <div key={ins.id} className={`flex flex-col md:flex-row gap-3 items-start md:items-end p-4 rounded-xl border-2 ${col.bg} ${col.border}`}>
+                    <div key={ins.id} className={`relative flex flex-col md:flex-row gap-3 items-start md:items-end p-4 rounded-xl border-2 ${col.bg} ${col.border}`}>
+                      {isLead && <span className="absolute -top-0 left-4 -translate-y-1/2 text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright text-white shadow-md">LEAD</span>}
                       <div className="flex items-center gap-2 min-w-[60px]">
-                        {isLead && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/20 text-md-primary">LEAD</span>}
                         <span className={`text-sm font-bold ${col.accent}`}>INS-{ins.id.split('-')[1]}</span>
                       </div>
                       <div className="flex-1 w-full"><label className={LABEL}>Name</label><input className={INPUT} value={ins.name} onChange={e => updateInsurer(ins.id, 'name', e.target.value)}/></div>
