@@ -409,7 +409,7 @@ function App() {
               <h2 className="text-lg font-bold text-md-on-surface mb-4">Local Fronts (Countries)</h2>
               <div className="space-y-3">
                 {setup.localFronts.map(front => (
-                  <div key={front.id} className="flex flex-col md:flex-row gap-3 items-start md:items-end p-4 rounded-xl border-2 bg-teal-500/10 border-teal-500/20">
+                  <div key={front.id} className="flex flex-col md:flex-row gap-3 items-start md:items-end p-4 rounded-xl border-2 bg-md-surface-high border-[rgba(255,255,255,0.08)]">
                     <div className="flex-1 w-full"><label className={LABEL}>Country</label><input className={INPUT} value={front.country} onChange={e => updateFront(front.id, 'country', e.target.value)}/></div>
                     <div className="flex-1 w-full"><label className={LABEL}>Local Insurer</label><input className={INPUT} value={front.name} onChange={e => updateFront(front.id, 'name', e.target.value)}/></div>
                     <div className="flex-1 w-full"><label className={LABEL}>Inward Policy ID</label><input className={INPUT} value={front.inwardId} onChange={e => updateFront(front.id, 'inwardId', e.target.value)}/></div>
@@ -417,7 +417,7 @@ function App() {
                   </div>
                 ))}
               </div>
-              <button onClick={addFront} className="mt-3 flex items-center gap-2 text-md-on-surface-variant hover:text-md-on-surface text-sm font-bold px-4 py-2.5 rounded-lg border border-dashed border-md-outline-variant hover:border-teal-500/30 transition-all w-full justify-center">
+              <button onClick={addFront} className="mt-3 flex items-center gap-2 text-md-on-surface-variant hover:text-md-on-surface text-sm font-bold px-4 py-2.5 rounded-lg border border-dashed border-md-outline-variant hover:border-md-primary-bright transition-all w-full justify-center">
                 <Plus size={16}/> Add Country
               </button>
             </div>
