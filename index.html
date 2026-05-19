@@ -17,17 +17,40 @@ tailwind.config = {
       fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['Inter', 'monospace'] },
       colors: {
         md: {
-          bg: '#0A0A0A', surface: '#131313', 'surface-low': '#1c1b1b', 'surface-mid': '#201f1f',
-          'surface-high': '#2a2a2a', 'surface-highest': '#353534', 'on-surface': '#e5e2e1',
-          'on-surface-variant': '#c2c6d5', outline: '#8c909f', 'outline-variant': '#424753',
-          primary: '#adc6ff', 'primary-bright': '#4285f4', 'on-primary': '#002e69',
-          'primary-container': '#4d8efe', secondary: '#b9c8d9', 'secondary-container': '#3a4856',
-          tertiary: '#4cd6ff', error: '#ffb4ab', success: '#a8d5a2', warn: '#fbbf24',
+          bg: 'var(--md-bg)', surface: 'var(--md-surface)', 'surface-low': 'var(--md-surface-low)', 'surface-mid': 'var(--md-surface-mid)',
+          'surface-high': 'var(--md-surface-high)', 'surface-highest': 'var(--md-surface-highest)', 'on-surface': 'var(--md-on-surface)',
+          'on-surface-variant': 'var(--md-on-surface-variant)', outline: 'var(--md-outline)', 'outline-variant': 'var(--md-outline-variant)',
+          primary: 'var(--md-primary)', 'primary-bright': 'var(--md-primary-bright)', 'on-primary': 'var(--md-on-primary)',
+          'primary-container': 'var(--md-primary-container)', secondary: 'var(--md-secondary)', 'secondary-container': 'var(--md-secondary-container)',
+          tertiary: 'var(--md-tertiary)', error: 'var(--md-error)', success: 'var(--md-success)', warn: 'var(--md-warn)',
         }
       }
     }
   }
 }
+function applyTheme(t) {
+  const r = document.documentElement.style;
+  if (t === 'light') {
+    r.setProperty('--md-bg','#f5f5f5'); r.setProperty('--md-surface','#ffffff'); r.setProperty('--md-surface-low','#fafafa');
+    r.setProperty('--md-surface-mid','#f0f0f0'); r.setProperty('--md-surface-high','#e8e8e8'); r.setProperty('--md-surface-highest','#dcdcdc');
+    r.setProperty('--md-on-surface','#1a1a1a'); r.setProperty('--md-on-surface-variant','#555555'); r.setProperty('--md-outline','#999999');
+    r.setProperty('--md-outline-variant','#cccccc'); r.setProperty('--md-primary','#1967d2'); r.setProperty('--md-primary-bright','#4285f4');
+    r.setProperty('--md-on-primary','#ffffff'); r.setProperty('--md-primary-container','#d2e3fc'); r.setProperty('--md-secondary','#5f6368');
+    r.setProperty('--md-secondary-container','#e8eaed'); r.setProperty('--md-tertiary','#007b83'); r.setProperty('--md-error','#d93025');
+    r.setProperty('--md-success','#1e8e3e'); r.setProperty('--md-warn','#e37400');
+    document.body.style.background='#f5f5f5'; document.body.style.color='#1a1a1a';
+  } else {
+    r.setProperty('--md-bg','#0A0A0A'); r.setProperty('--md-surface','#131313'); r.setProperty('--md-surface-low','#1c1b1b');
+    r.setProperty('--md-surface-mid','#201f1f'); r.setProperty('--md-surface-high','#2a2a2a'); r.setProperty('--md-surface-highest','#353534');
+    r.setProperty('--md-on-surface','#e5e2e1'); r.setProperty('--md-on-surface-variant','#c2c6d5'); r.setProperty('--md-outline','#8c909f');
+    r.setProperty('--md-outline-variant','#424753'); r.setProperty('--md-primary','#adc6ff'); r.setProperty('--md-primary-bright','#4285f4');
+    r.setProperty('--md-on-primary','#002e69'); r.setProperty('--md-primary-container','#4d8efe'); r.setProperty('--md-secondary','#b9c8d9');
+    r.setProperty('--md-secondary-container','#3a4856'); r.setProperty('--md-tertiary','#4cd6ff'); r.setProperty('--md-error','#ffb4ab');
+    r.setProperty('--md-success','#a8d5a2'); r.setProperty('--md-warn','#fbbf24');
+    document.body.style.background='#0A0A0A'; document.body.style.color='#e5e2e1';
+  }
+}
+applyTheme(localStorage.getItem('carrier2026-theme') || 'dark');
 </script>
 <style>
   @keyframes flowDash { to { stroke-dashoffset: -20; } }
@@ -37,15 +60,15 @@ tailwind.config = {
   .pulse-glow-teal { box-shadow: 0 0 24px 4px rgba(20,184,166,0.35); border-color: #14b8a6 !important; }
   .dimmed-inactive { opacity: 0.25; filter: grayscale(80%); transition: all 0.5s ease; }
   .active-pop { opacity: 1; filter: grayscale(0%); transform: scale(1.02); transition: all 0.3s ease; z-index: 20; }
-  body { background: #0A0A0A; color: #e5e2e1; }
-  select option { background: #201f19; color: #e5e2e1; }
+  body { background: var(--md-bg); color: var(--md-on-surface); }
+  select option { background: var(--md-surface-mid); color: var(--md-on-surface); }
   input[type="number"]::-webkit-inner-spin-button { opacity: 0.3; }
-  .tree-children { margin-left: 12px; padding-left: 28px; border-left: 2px solid rgba(255,255,255,0.08); }
+  .tree-children { margin-left: 12px; padding-left: 28px; border-left: 2px solid var(--md-outline-variant); }
   .tree-leaf { position: relative; padding: 4px 0; }
-  .tree-leaf::before { content: ''; position: absolute; left: -28px; top: 22px; width: 28px; border-top: 2px solid rgba(255,255,255,0.08); }
+  .tree-leaf::before { content: ''; position: absolute; left: -28px; top: 22px; width: 28px; border-top: 2px solid var(--md-outline-variant); }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: #131313; }
-  ::-webkit-scrollbar-thumb { background: #424753; border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: var(--md-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--md-outline-variant); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -69,6 +92,9 @@ const Save = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||20} h
 const Trash2 = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={p.className}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>;
 
 const Crown = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={p.className}><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/></svg>;
+
+const Sun = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={p.className}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>;
+const Moon = (p) => <svg xmlns="http://www.w3.org/2000/svg" width={p.size||20} height={p.size||20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={p.className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>;
 
 const STORAGE_KEY = 'carrier2026-setups-v2';
 
@@ -139,6 +165,8 @@ function Parties({ parties }) {
 
 function App() {
   const [activeTab, setActiveTab] = useState('pipeline');
+  const [theme, setTheme] = useState(localStorage.getItem('carrier2026-theme') || 'dark');
+  const toggleTheme = () => { const t = theme === 'dark' ? 'light' : 'dark'; setTheme(t); localStorage.setItem('carrier2026-theme', t); applyTheme(t); };
   const [setups, setSetups] = useState(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : DEFAULT_SETUPS; }
     catch { return DEFAULT_SETUPS; }
@@ -287,13 +315,18 @@ function App() {
                 <div className="text-[11px] text-md-on-surface-variant font-medium">{setup.masterPolicyId}</div>
               </div>
             </div>
-            <div className="flex bg-md-surface-high rounded-xl p-1 border border-[rgba(255,255,255,0.06)]">
-              {tabs.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === tab.id ? 'bg-md-primary-bright text-white shadow-md' : 'text-md-on-surface-variant hover:text-md-on-surface'}`}>
-                  {tab.icon}<span className="hidden md:inline">{tab.label}</span>
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <div className="flex bg-md-surface-high rounded-xl p-1 border border-[rgba(255,255,255,0.06)]">
+                {tabs.map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm transition-all ${activeTab === tab.id ? 'bg-md-primary-bright text-white shadow-md' : 'text-md-on-surface-variant hover:text-md-on-surface'}`}>
+                    {tab.icon}<span className="hidden md:inline">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
+              <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-md-surface-high border border-[rgba(255,255,255,0.06)] text-md-on-surface-variant hover:text-md-primary transition-all" title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}>
+                {theme === 'dark' ? <Sun size={20}/> : <Moon size={20}/>}
+              </button>
             </div>
           </div>
         </div>
@@ -333,10 +366,10 @@ function App() {
                 <div><label className={LABEL}>Master Policy ID</label><input className={INPUT} value={setup.masterPolicyId} onChange={e => updateSetup('masterPolicyId', e.target.value)}/></div>
                 <div><label className={LABEL}>Min Ceding Fee (EUR)</label><input type="number" className={INPUT} value={setup.minCedingFee} onChange={e => updateSetup('minCedingFee', Number(e.target.value))}/></div>
               </div>
-              <div className="mt-4 p-4 rounded-xl border-2 bg-md-warn/10 border-md-warn/20">
+              <div className="mt-4 p-4 rounded-xl border-2 bg-md-surface-high border-[rgba(255,255,255,0.08)]">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-bold text-md-warn">Lead Fee Configuration</span>
-                  {(() => { const lf = setup.leadFee || {}; const freq = lf.frequency === 'once' ? 'One-Time' : 'Repeating'; const mode = lf.mode === 'fixed' ? 'Fixed' : 'Percentage'; return <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-warn/15 text-md-warn">{mode} &middot; {freq}</span>; })()}
+                  <span className="text-sm font-bold text-md-on-surface">Lead Fee Configuration</span>
+                  {(() => { const lf = setup.leadFee || {}; const freq = lf.frequency === 'once' ? 'One-Time' : 'Repeating'; const mode = lf.mode === 'fixed' ? 'Fixed' : 'Percentage'; return <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary/15 text-md-primary">{mode} &middot; {freq}</span>; })()}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
