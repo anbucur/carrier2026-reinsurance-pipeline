@@ -751,6 +751,45 @@ function App() {
               </div>
 
             </div>
+
+            {/* GLOSSARY */}
+            <div className="mt-8 border rounded-xl p-5 bg-md-surface-high border-[rgba(255,255,255,0.08)]">
+              <h3 className="text-sm font-bold text-md-on-surface uppercase tracking-[0.12em] mb-4">Glossary</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-sky-500/25 bg-sky-500/10 p-3">
+                  <div className="text-xs font-black text-sky-300 uppercase tracking-wide">Ceding Co</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Local front insurer that cedes risk into the master program via an inward policy.</div>
+                </div>
+                <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3">
+                  <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">Reinsured</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Party receiving ceded risk from the local front on inward business.</div>
+                </div>
+                <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-3">
+                  <div className="text-xs font-black text-violet-300 uppercase tracking-wide">Lead Reinsurer</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier on the master policy that also receives the lead fee.</div>
+                </div>
+                <div className="rounded-lg border border-teal-500/25 bg-teal-500/10 p-3">
+                  <div className="text-xs font-black text-teal-300 uppercase tracking-wide">Co-insurer</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Additional insurer sharing distributed net risk under configured participation.</div>
+                </div>
+                <div className="rounded-lg border border-indigo-500/25 bg-indigo-500/10 p-3">
+                  <div className="text-xs font-black text-indigo-300 uppercase tracking-wide">Retrocedant</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Party transferring reinsured risk onward through outward (retrocession) policies.</div>
+                </div>
+                <div className="rounded-lg border border-cyan-500/25 bg-cyan-500/10 p-3">
+                  <div className="text-xs font-black text-cyan-300 uppercase tracking-wide">Retrocessionaire</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Party accepting risk from the retrocedant under outward policy terms.</div>
+                </div>
+                <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3">
+                  <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">Lead Fee</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Fee paid to the lead reinsurer, configurable as percentage or fixed, repeating or one-time.</div>
+                </div>
+                <div className="rounded-lg border border-sky-500/25 bg-sky-500/10 p-3">
+                  <div className="text-xs font-black text-sky-300 uppercase tracking-wide">Ceding Fee</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Fee retained by the local front, calculated as a percentage with a minimum EUR floor.</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
