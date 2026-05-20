@@ -306,7 +306,7 @@ function App() {
     const leadFeePct = gross > 0 ? (leadFeeAmt / gross * 100) : 0;
     // Map: insurerId -> outward policy ID for the selected inward source
     const outwardPolicyByInsurerId = outward.reduce((acc, o) => {
-      if (o.frontId === simConfig.countryId) acc[o.insurerId] = o.id;
+      if (o.frontId === simConfig.countryId && !acc[o.insurerId]) acc[o.insurerId] = o.id;
       return acc;
     }, {});
     const insurerResults = setup.insurers.map(ins => {
@@ -655,7 +655,7 @@ function App() {
                             <span className={`font-bold text-sm ${col.accent} flex items-center gap-1.5`}><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
                             {displayPolicyId && <PolicyIdTag id={displayPolicyId}/>}
                             {isLead && displayPolicyId && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Paid directly via {displayPolicyId}</span>}
-                            {isLead && showResults && !displayPolicyId && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-claim/15 text-md-claim">Missing inward policy linkage</span>}
+                            {isLead && showResults && !displayPolicyId && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-claim/15 text-md-claim">No policy assigned</span>}
                           </div>
                           <div className="flex items-center justify-between mb-2">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded ${col.badge}`}>{ins.share}% Risk</span>
@@ -890,7 +890,7 @@ function App() {
                 </div>
                 <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-3">
                   <div className="text-xs font-black text-violet-300 uppercase tracking-wide">Lead Reinsurer</div>
-                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier that receives direct payment on the inward policy where the premium/claim was triggered and receives the fronting fee.</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier receiving direct payment on the inward policy where the premium/claim was triggered and collecting the fronting fee.</div>
                 </div>
                 <div className="rounded-lg border border-teal-500/25 bg-teal-500/10 p-3">
                   <div className="text-xs font-black text-teal-300 uppercase tracking-wide">Co-insurer</div>
