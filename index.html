@@ -292,6 +292,7 @@ function App() {
     const rawAmount = parseFloat(simConfig.amount);
     if (isNaN(rawAmount) || rawAmount <= 0) return;
     const sourceFront = setup.localFronts.find(f => f.id === simConfig.countryId);
+    const sourceInwardId = sourceFront?.inwardId || null;
     const gross = simConfig.type === 'CLAIM' ? -rawAmount : rawAmount;
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
     if (simConfig.type === 'PREMIUM') {
@@ -306,9 +307,12 @@ function App() {
     const insurerResults = setup.insurers.map(ins => {
       const isLead = ins.id === setup.leadInsurerId;
       const amt = net * (ins.share / 100);
-      return { id: ins.id, name: ins.name, isLead, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
+      const policyId = isLead
+        ? (sourceInwardId || setup.masterPolicyId)
+        : (outward.find(o => o.frontId === simConfig.countryId && o.insurerId === ins.id)?.id || null);
+      return { id: ins.id, name: ins.name, isLead, policyId, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
     });
-    setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, leadFeePct, cedingFeePct, minCedingFee } });
+    setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, sourceInwardId, leadFeePct, cedingFeePct, minCedingFee } });
   };
 
   const handleClearSim = () => setSim({ phase: 'IDLE', type: null, countryId: null, amount: 0, math: {} });
@@ -640,12 +644,15 @@ function App() {
                       const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
                       const outPol = !isLead ? outward.find(o => o.frontId === sim.countryId && o.insurerId === ins.id) : null;
                       const ir = sim.math.insurerResults?.find(r => r.id === ins.id);
+                      const displayPolicyId = isLead
+                        ? (ir?.policyId || selectedFront?.inwardId || null)
+                        : (ir?.policyId || outPol?.id || null);
                       return (
                         <div key={ins.id} className={`border-2 rounded-xl p-4 relative transition-all ${col.bg} ${col.border} ${sim.phase === 'DISTRIBUTE' && showResults ? `active-pop ${getGlow(sim.type)}` : ''}`}>
                           <div className="flex items-center justify-between mb-1">
                             <span className={`font-bold text-sm ${col.accent} flex items-center gap-1.5`}><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
-                            {outPol && <PolicyIdTag id={outPol.id}/>}
-                            {isLead && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Direct via {setup.masterPolicyId}</span>}
+                            {displayPolicyId && <PolicyIdTag id={displayPolicyId}/>}
+                            {isLead && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Direct on triggering inward policy</span>}
                           </div>
                           <div className="flex items-center justify-between mb-2">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded ${col.badge}`}>{ins.share}% Risk</span>
@@ -880,7 +887,7 @@ function App() {
                 </div>
                 <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-3">
                   <div className="text-xs font-black text-violet-300 uppercase tracking-wide">Lead Reinsurer</div>
-                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier on the master policy that also receives the fronting fee.</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier that receives direct payment on the inward policy where the premium/claim was triggered.</div>
                 </div>
                 <div className="rounded-lg border border-teal-500/25 bg-teal-500/10 p-3">
                   <div className="text-xs font-black text-teal-300 uppercase tracking-wide">Co-insurer</div>
