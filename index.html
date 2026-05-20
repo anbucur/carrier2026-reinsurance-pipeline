@@ -666,7 +666,6 @@ function App() {
                 <div className="tree-children">
                   {setup.insurers.map((ins, idx) => {
                     const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
-                    const ir = sim.math.insurerResults?.find(r => r.id === ins.id);
                     return (
                       <div key={ins.id} className="tree-leaf">
                         <div className="border-2 rounded-xl p-4 bg-md-surface-high border-[rgba(255,255,255,0.08)]">
@@ -674,8 +673,6 @@ function App() {
                             <span className="font-bold text-sm text-md-on-surface flex items-center gap-1.5"><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
                             <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/20 text-md-primary">{ins.share}%</span>
                           </div>
-                          {isLead && (() => { const p = [{ role: 'Lead Reinsurer', name: ins.name }].concat(coInsurers.map(ci => ({ role: 'Co-insurer', name: ci.name }))); return <Parties parties={p}/>; })()}
-                          {!isLead && <Parties parties={[{ role: 'Retrocedant', name: leadIns.name }, { role: 'Retrocessionaire', name: ins.name }]}/>}
                           {ledgers.length > 0 && (() => { const lt = ledgerTotals.byInsurer[ins.id]; return (
                             <div className="mt-2 grid grid-cols-3 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border border-[rgba(255,255,255,0.06)]">
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Risk Share</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.amount)}</div></div>
