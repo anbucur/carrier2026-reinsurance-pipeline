@@ -291,7 +291,7 @@ function App() {
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
     if (simConfig.type === 'PREMIUM') {
       leadFeeAmt = leadFeeConfig.mode === 'percentage' ? gross * (Number(leadFeeConfig.value) / 100) : Number(leadFeeConfig.value) || 0;
-      const alreadyChargedOnce = leadFeeConfig.frequency === 'once' && sourceFront && ledgers.some(tx => tx.inwardId === sourceFront.inwardId && tx.mgaFee > 0);
+      const alreadyChargedOnce = leadFeeConfig.frequency === 'once' && sourceFront && ledgers.some(tx => tx.frontId === sourceFront.id && tx.mgaFee > 0);
       if (alreadyChargedOnce) leadFeeAmt = 0;
       const percentageFee = gross * (cedingFeePct / 100);
       cedingFee = Math.max(percentageFee, minCedingFee);
@@ -317,7 +317,7 @@ function App() {
       t = setTimeout(() => {
         const front = setup.localFronts.find(f => f.id === sim.countryId);
         if (!front) return;
-        setLedgers(prev => [{ id: `TXN-${Math.floor(Math.random()*90000)+10000}`, date: new Date().toLocaleTimeString(), type: sim.type, country: front.country, frontName: front.name, inwardId: front.inwardId, ...sim.math }, ...prev]);
+        setLedgers(prev => [{ id: `TXN-${Math.floor(Math.random()*90000)+10000}`, date: new Date().toLocaleTimeString(), type: sim.type, country: front.country, frontId: front.id, frontName: front.name, inwardId: front.inwardId, ...sim.math }, ...prev]);
         setSim(p => ({ ...p, phase: 'COMPLETE' }));
       }, 2000);
     }
