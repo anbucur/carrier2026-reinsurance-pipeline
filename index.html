@@ -307,10 +307,10 @@ function App() {
     const insurerResults = setup.insurers.map(ins => {
       const isLead = ins.id === setup.leadInsurerId;
       const amt = net * (ins.share / 100);
-      const policyId = isLead
+      const allocatedPolicyId = isLead
         ? (sourceInwardId || setup.masterPolicyId)
         : (outward.find(o => o.frontId === simConfig.countryId && o.insurerId === ins.id)?.id || null);
-      return { id: ins.id, name: ins.name, isLead, policyId, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
+      return { id: ins.id, name: ins.name, isLead, allocatedPolicyId, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
     });
     setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, sourceInwardId, leadFeePct, cedingFeePct, minCedingFee } });
   };
@@ -642,11 +642,8 @@ function App() {
                     {setup.insurers.map((ins, idx) => {
                       const col = INS_COLORS[idx % INS_COLORS.length];
                       const isLead = ins.id === (setup.leadInsurerId || setup.insurers[0]?.id);
-                      const outPol = !isLead ? outward.find(o => o.frontId === sim.countryId && o.insurerId === ins.id) : null;
                       const ir = sim.math.insurerResults?.find(r => r.id === ins.id);
-                      const displayPolicyId = isLead
-                        ? (ir?.policyId || selectedFront?.inwardId || null)
-                        : (ir?.policyId || outPol?.id || null);
+                      const displayPolicyId = ir?.allocatedPolicyId;
                       return (
                         <div key={ins.id} className={`border-2 rounded-xl p-4 relative transition-all ${col.bg} ${col.border} ${sim.phase === 'DISTRIBUTE' && showResults ? `active-pop ${getGlow(sim.type)}` : ''}`}>
                           <div className="flex items-center justify-between mb-1">
