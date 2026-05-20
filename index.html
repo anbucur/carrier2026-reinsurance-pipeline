@@ -554,7 +554,7 @@ function App() {
                       <div key={front.id} className={`mb-4 last:mb-0 ${!isTarget && sim.phase !== 'IDLE' ? 'dimmed-inactive' : ''}`}>
                         <div className={`border-2 rounded-xl p-4 relative transition-all ${activeNow ? `active-pop ${getGlow(sim.type)}` : 'bg-md-primary-bright/10 border-md-primary-bright/20'}`}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Globe size={16} className={activeNow ? (sim.type === 'PREMIUM' ? 'text-emerald-400' : 'text-red-400') : 'text-md-primary'}/> {front.country} Inward</span>
+                            <span className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Globe size={16} className={activeNow ? (sim.type === 'PREMIUM' ? 'text-md-success' : 'text-md-error') : 'text-md-primary'}/> {front.country} Inward</span>
                             <PolicyIdTag id={front.inwardId}/>
                           </div>
                           <div className="text-[11px] text-md-on-surface-variant font-medium mb-2">From {front.name}</div>
@@ -584,7 +584,7 @@ function App() {
                         <div className="flex justify-between text-md-on-surface-variant text-xs pb-1 border-b surface-border-soft"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
                         {sim.type === 'PREMIUM' && (<>
                           <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-tertiary/15 text-md-tertiary font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-emerald-500/15 text-emerald-400 font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-success/15 text-md-success font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
                         </>)}
                         <div className="flex justify-between font-bold text-xs pt-1.5 border-t surface-border text-md-primary"><span>= Net Distributable:</span><span>{fmt(sim.math.net)}</span></div>
                       </div>
@@ -619,7 +619,7 @@ function App() {
                           {showResults && ir && (
                             <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
                               <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Risk Share:</span><span className="font-bold text-md-on-surface">{fmt(ir.amount)}</span></div>
-                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-emerald-400 text-xs"><span>Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
+                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-md-success text-xs"><span>Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
                               <div className="flex justify-between font-bold text-xs pt-1 border-t surface-border text-md-on-surface"><span>Total:</span><span>{fmt(ir.total)}</span></div>
                             </div>
                           )}
@@ -677,7 +677,7 @@ function App() {
                       <th className="px-4 py-3 text-md-on-surface-variant text-[11px] uppercase tracking-wider">Inward</th>
                       <th className="px-4 py-3 text-right text-md-on-surface-variant text-[11px] uppercase tracking-wider">Gross</th>
                       <th className="px-4 py-3 text-right text-md-tertiary text-[11px] uppercase tracking-wider">Ceding</th>
-                      <th className="px-4 py-3 text-right text-emerald-400 text-[11px] uppercase tracking-wider">Lead</th>
+                      <th className="px-4 py-3 text-right text-md-success text-[11px] uppercase tracking-wider">Lead</th>
                       {setup.insurers.map((ins, idx) => {
                         const col = INS_COLORS[idx % INS_COLORS.length];
                         return <th key={ins.id} className={`px-4 py-3 text-right ${col.header} text-[11px] uppercase tracking-wider`}>{ins.name} ({ins.share}%)</th>;
@@ -693,14 +693,14 @@ function App() {
                           <td className="px-4 py-3"><div className="font-mono text-xs text-md-primary">{tx.id}</div><div className="text-md-on-surface-variant text-[11px]">{tx.date}</div></td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {tx.type === 'PREMIUM' ? <span className="bg-emerald-500/15 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Premium</span> : <span className="bg-red-500/15 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded uppercase">Claim</span>}
+                              {tx.type === 'PREMIUM' ? <span className="bg-md-success/15 text-md-success text-[10px] font-bold px-2 py-0.5 rounded uppercase">Premium</span> : <span className="bg-md-error/15 text-md-error text-[10px] font-bold px-2 py-0.5 rounded uppercase">Claim</span>}
                               <span className="font-medium text-md-on-surface-variant text-xs">{tx.country}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 font-mono text-xs text-md-on-surface-variant">{tx.inwardId}</td>
-                          <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(tx.gross)}</td>
+                          <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-md-success' : 'text-md-error'}`}>{fmt(tx.gross)}</td>
                           <td className="px-4 py-3 text-right font-bold font-mono bg-md-tertiary/5">{tx.cedingFee > 0 ? <span className="text-md-tertiary">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
-                          <td className="px-4 py-3 text-right font-bold font-mono bg-emerald-500/5">{tx.mgaFee > 0 ? <span className="text-emerald-400">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
+                          <td className="px-4 py-3 text-right font-bold font-mono bg-md-success/5">{tx.mgaFee > 0 ? <span className="text-md-success">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           {(tx.insurerResults || []).map((ir, idx) => {
                             const col = INS_COLORS[idx % INS_COLORS.length];
                             return <td key={ir.id} className={`px-4 py-3 text-right font-bold font-mono ${col.accent} bg-${col.accent.replace('text-','')}/5`}>{fmt(ir.total)}</td>;
@@ -731,7 +731,7 @@ function App() {
                 <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding</div><div className="text-xs font-bold text-md-tertiary">{fmt(ledgerTotals.masterCeding)}</div></div>
-                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-emerald-400">{fmt(ledgerTotals.masterLeadFee)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-md-success">{fmt(ledgerTotals.masterLeadFee)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Net</div><div className="text-xs font-bold text-md-primary">{fmt(ledgerTotals.masterNet)}</div></div>
                 </div>
               )}
@@ -757,7 +757,7 @@ function App() {
                           {ledgers.length > 0 && (() => { const lt = ledgerTotals.byInsurer[ins.id]; return (
                             <div className="mt-2 grid grid-cols-3 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Risk Share</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.amount)}</div></div>
-                              {isLead && <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-emerald-400">{fmt(lt.leadFee)}</div></div>}
+                              {isLead && <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-md-success">{fmt(lt.leadFee)}</div></div>}
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Total</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.total)}</div></div>
                             </div>
                           ); })()}
