@@ -22,7 +22,7 @@ tailwind.config = {
           'on-surface-variant': 'rgb(var(--md-on-surface-variant) / <alpha-value>)', outline: 'rgb(var(--md-outline) / <alpha-value>)', 'outline-variant': 'rgb(var(--md-outline-variant) / <alpha-value>)',
           primary: 'rgb(var(--md-primary) / <alpha-value>)', 'primary-bright': 'rgb(var(--md-primary-bright) / <alpha-value>)', 'on-primary': 'rgb(var(--md-on-primary) / <alpha-value>)',
           'primary-container': 'rgb(var(--md-primary-container) / <alpha-value>)', secondary: 'rgb(var(--md-secondary) / <alpha-value>)', 'secondary-container': 'rgb(var(--md-secondary-container) / <alpha-value>)',
-          tertiary: 'rgb(var(--md-tertiary) / <alpha-value>)', error: 'rgb(var(--md-error) / <alpha-value>)', success: 'rgb(var(--md-success) / <alpha-value>)', warn: 'rgb(var(--md-warn) / <alpha-value>)',
+          tertiary: 'rgb(var(--md-tertiary) / <alpha-value>)', claim: 'rgb(var(--md-claim) / <alpha-value>)', error: 'rgb(var(--md-error) / <alpha-value>)', success: 'rgb(var(--md-success) / <alpha-value>)', warn: 'rgb(var(--md-warn) / <alpha-value>)',
         }
       }
     }
@@ -48,6 +48,7 @@ tailwind.config = {
     --md-secondary: 185 200 217;
     --md-secondary-container: 58 72 86;
     --md-tertiary: 76 214 255;
+    --md-claim: 167 139 250;
     --md-error: 255 180 171;
     --md-success: 168 213 162;
     --md-warn: 251 191 36;
@@ -56,6 +57,8 @@ tailwind.config = {
     --ui-border-strong: rgba(255, 255, 255, 0.12);
     --ui-scroll-track: #131313;
     --ui-scroll-thumb: #424753;
+    --ui-fee-glow: rgba(76, 214, 255, 0.18);
+    --ui-claim-glow: rgba(167, 139, 250, 0.3);
   }
   [data-theme="light"] {
     --md-bg: 242 245 250;
@@ -75,6 +78,7 @@ tailwind.config = {
     --md-secondary: 68 88 117;
     --md-secondary-container: 214 223 238;
     --md-tertiary: 0 128 166;
+    --md-claim: 109 40 217;
     --md-error: 196 58 58;
     --md-success: 26 127 55;
     --md-warn: 180 100 22;
@@ -83,10 +87,12 @@ tailwind.config = {
     --ui-border-strong: rgba(88, 102, 126, 0.34);
     --ui-scroll-track: #dce4ef;
     --ui-scroll-thumb: #98a9c2;
+    --ui-fee-glow: rgba(0, 128, 166, 0.18);
+    --ui-claim-glow: rgba(109, 40, 217, 0.2);
   }
   @keyframes flowDash { to { stroke-dashoffset: -20; } }
   .pulse-glow-green { box-shadow: 0 0 24px 4px rgba(16,185,129,0.35); border-color: #10b981 !important; }
-  .pulse-glow-red { box-shadow: 0 0 24px 4px rgba(239,68,68,0.35); border-color: #ef4444 !important; }
+  .pulse-glow-claim { box-shadow: 0 0 24px 4px var(--ui-claim-glow); border-color: rgb(var(--md-claim)) !important; }
   .pulse-glow-blue { box-shadow: 0 0 24px 4px rgba(66,133,244,0.35); border-color: #4285f4 !important; }
   .pulse-glow-teal { box-shadow: 0 0 24px 4px rgba(20,184,166,0.35); border-color: #14b8a6 !important; }
   .dimmed-inactive { opacity: 0.25; filter: grayscale(80%); transition: all 0.5s ease; }
@@ -104,6 +110,7 @@ tailwind.config = {
   .surface-border-soft { border-color: var(--ui-border-soft); }
   .surface-border-strong { border-color: var(--ui-border-strong); }
   .divide-surface-border-soft > :not([hidden]) ~ :not([hidden]) { border-color: var(--ui-border-soft) !important; }
+  .fee-glow { box-shadow: 0 0 24px 4px var(--ui-fee-glow); }
 </style>
 </head>
 <body>
@@ -165,7 +172,7 @@ const INS_COLORS = [
 
 const fmt = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
 
-const getGlow = (t) => t === 'PREMIUM' ? 'pulse-glow-green' : t === 'CLAIM' ? 'pulse-glow-red' : 'pulse-glow-blue';
+const getGlow = (t) => t === 'PREMIUM' ? 'pulse-glow-green' : t === 'CLAIM' ? 'pulse-glow-claim' : 'pulse-glow-blue';
 
 function getOutwardPolicies(setup) {
   return setup.localFronts.flatMap(f =>
@@ -216,6 +223,9 @@ function App() {
 
   const setup = setups.find(s => s.id === activeSetupId) || setups[0];
   const outward = useMemo(() => getOutwardPolicies(setup), [setup]);
+  const leadFeeConfig = { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}) };
+  const cedingFeePct = Math.max(0, Number(setup.cedingFeePct) || 0);
+  const minCedingFee = Math.max(0, Number(setup.minCedingFee) || 0);
   const totalShares = setup.insurers.reduce((s, i) => s + i.share, 0);
   const sharesValid = totalShares === 100;
   const isAnimating = sim.phase !== 'IDLE' && sim.phase !== 'COMPLETE';
@@ -276,15 +286,15 @@ function App() {
     if (isAnimating || !sharesValid) return;
     const rawAmount = parseFloat(simConfig.amount);
     if (isNaN(rawAmount) || rawAmount <= 0) return;
+    const sourceFront = setup.localFronts.find(f => f.id === simConfig.countryId);
     const gross = simConfig.type === 'CLAIM' ? -rawAmount : rawAmount;
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
-    const lfFallback = { mode: 'percentage', frequency: 'repeating', value: 5 };
-  const lf = { ...lfFallback, ...(setup.leadFee || {}) };
     if (simConfig.type === 'PREMIUM') {
-      leadFeeAmt = lf.mode === 'percentage' ? gross * (lf.value / 100) : lf.value;
-      const alreadyChargedOnce = lf.frequency === 'once' && ledgers.some(tx => tx.inwardId === simConfig.countryId && tx.mgaFee > 0);
+      leadFeeAmt = leadFeeConfig.mode === 'percentage' ? gross * (Number(leadFeeConfig.value) / 100) : Number(leadFeeConfig.value) || 0;
+      const alreadyChargedOnce = leadFeeConfig.frequency === 'once' && sourceFront && ledgers.some(tx => tx.inwardId === sourceFront.inwardId && tx.mgaFee > 0);
       if (alreadyChargedOnce) leadFeeAmt = 0;
-      cedingFee = Math.max(gross * (setup.cedingFeePct / 100), setup.minCedingFee);
+      const percentageFee = gross * (cedingFeePct / 100);
+      cedingFee = Math.max(percentageFee, minCedingFee);
       net = gross - leadFeeAmt - cedingFee;
     }
     const leadFeePct = gross > 0 ? (leadFeeAmt / gross * 100) : 0;
@@ -293,7 +303,7 @@ function App() {
       const amt = net * (ins.share / 100);
       return { id: ins.id, name: ins.name, isLead, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
     });
-    setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, leadFeePct } });
+    setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, leadFeePct, cedingFeePct, minCedingFee } });
   };
 
   const handleClearSim = () => setSim({ phase: 'IDLE', type: null, countryId: null, amount: 0, math: {} });
@@ -409,39 +419,60 @@ function App() {
             {/* PROGRAM SETTINGS */}
             <div className="bg-md-surface rounded-xl border surface-border p-4 md:p-6">
               <h2 className="text-lg font-bold text-md-on-surface mb-4">Program Settings</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div><label className={LABEL}>Carrier Name</label><input className={INPUT} value={setup.carrierName} onChange={e => updateSetup('carrierName', e.target.value)}/></div>
                 <div><label className={LABEL}>Master Policy ID</label><input className={INPUT} value={setup.masterPolicyId} onChange={e => updateSetup('masterPolicyId', e.target.value)}/></div>
-                <div><label className={LABEL}>Min Ceding Fee (EUR)</label><input type="number" className={INPUT} value={setup.minCedingFee} onChange={e => updateSetup('minCedingFee', Number(e.target.value))}/></div>
               </div>
-              <div className="mt-4 p-4 rounded-xl border-2 bg-md-tertiary/10 border-md-tertiary/20">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-bold text-md-tertiary">Lead Fee Configuration</span>
-                  {(() => { const lf = setup.leadFee || {}; const freq = lf.frequency === 'once' ? 'One-Time' : 'Repeating'; const mode = lf.mode === 'fixed' ? 'Fixed' : 'Percentage'; return <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-tertiary/15 text-md-tertiary">{mode} &middot; {freq}</span>; })()}
+              <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border-2 bg-md-primary/10 border-md-primary/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-bold text-md-primary">Lead Fee Configuration</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary/15 text-md-primary">
+                      {leadFeeConfig.mode === 'fixed' ? 'Fixed' : 'Percentage'} &middot; {leadFeeConfig.frequency === 'once' ? 'One-Time' : 'Repeating'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className={LABEL}>Mode</label>
+                      <select className={INPUT} value={leadFeeConfig.mode} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...leadFeeConfig, mode: e.target.value })}>
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (EUR)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={LABEL}>Frequency</label>
+                      <select className={INPUT} value={leadFeeConfig.frequency} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...leadFeeConfig, frequency: e.target.value })}>
+                        <option value="repeating">Repeating (every txn)</option>
+                        <option value="once">One-Time (per inward policy)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={LABEL}>{leadFeeConfig.mode === 'fixed' ? 'Fixed Amount (EUR)' : 'Percentage (%)'}</label>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={leadFeeConfig.value ?? 5} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...leadFeeConfig, value: Number(e.target.value) })}/>
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className={LABEL}>Mode</label>
-                    <select className={INPUT} value={(setup.leadFee || {}).mode || 'percentage'} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), mode: e.target.value })}>
-                      <option value="percentage">Percentage (%)</option>
-                      <option value="fixed">Fixed Amount (EUR)</option>
-                    </select>
+                <div className="p-4 rounded-xl border-2 bg-md-tertiary/10 border-md-tertiary/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-bold text-md-tertiary">Ceding Fee Configuration</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-tertiary/15 text-md-tertiary">
+                      {cedingFeePct}% &middot; Min {fmt(minCedingFee)}
+                    </span>
                   </div>
-                  <div>
-                    <label className={LABEL}>Frequency</label>
-                    <select className={INPUT} value={(setup.leadFee || {}).frequency || 'repeating'} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), frequency: e.target.value })}>
-                      <option value="repeating">Repeating (every txn)</option>
-                      <option value="once">One-Time (per inward policy)</option>
-                    </select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className={LABEL}>Percentage (%)</label>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={setup.cedingFeePct ?? 0} onChange={e => updateSetup('cedingFeePct', Number(e.target.value))}/>
+                    </div>
+                    <div>
+                      <label className={LABEL}>Minimum Fee (EUR)</label>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={setup.minCedingFee ?? 0} onChange={e => updateSetup('minCedingFee', Number(e.target.value))}/>
+                    </div>
                   </div>
-                  <div>
-                    <label className={LABEL}>{(setup.leadFee || {}).mode === 'fixed' ? 'Fixed Amount (EUR)' : 'Percentage (%)'}</label>
-                    <input type="number" className={INPUT} value={(setup.leadFee || {}).value ?? 5} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}), value: Number(e.target.value) })}/>
+                  <div className="mt-3 text-xs font-medium text-md-on-surface-variant">
+                    Applied on premium bookings as max(gross × {cedingFeePct}%, {fmt(minCedingFee)}).
                   </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div><label className={LABEL}>Ceding Fee (%)</label><input type="number" className={INPUT} value={setup.cedingFeePct} onChange={e => updateSetup('cedingFeePct', Number(e.target.value))}/></div>
               </div>
             </div>
 
@@ -554,7 +585,7 @@ function App() {
                       <div key={front.id} className={`mb-4 last:mb-0 ${!isTarget && sim.phase !== 'IDLE' ? 'dimmed-inactive' : ''}`}>
                         <div className={`border-2 rounded-xl p-4 relative transition-all ${activeNow ? `active-pop ${getGlow(sim.type)}` : 'bg-md-primary-bright/10 border-md-primary-bright/20'}`}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Globe size={16} className={activeNow ? (sim.type === 'PREMIUM' ? 'text-md-success' : 'text-md-error') : 'text-md-primary'}/> {front.country} Inward</span>
+                            <span className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Globe size={16} className={activeNow ? (sim.type === 'PREMIUM' ? 'text-md-success' : 'text-md-claim') : 'text-md-primary'}/> {front.country} Inward</span>
                             <PolicyIdTag id={front.inwardId}/>
                           </div>
                           <div className="text-[11px] text-md-on-surface-variant font-medium mb-2">From {front.name}</div>
@@ -573,7 +604,7 @@ function App() {
                 {/* ENGINE */}
                 <div className="flex flex-col justify-center">
                   <h3 className="text-center font-bold text-md-on-surface-variant uppercase tracking-[0.15em] text-[11px] mb-5">2. MGA Processing Engine</h3>
-                  <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-primary-bright/10 ${sim.phase === 'FEE_CALC' ? 'border-md-tertiary shadow-[0_0_24px_4px_rgba(76,214,255,0.18)]' : 'border-md-primary-bright/20'}`}>
+                  <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-primary-bright/10 ${sim.phase === 'FEE_CALC' ? 'border-md-tertiary fee-glow' : 'border-md-primary-bright/20'}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Settings2 size={16} className="text-md-primary"/> Fee Calculation</div>
                       {sim.phase === 'FEE_CALC' && <Activity size={16} className="text-md-tertiary animate-spin"/>}
@@ -583,7 +614,7 @@ function App() {
                       <div className="space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
                         <div className="flex justify-between text-md-on-surface-variant text-xs pb-1 border-b surface-border-soft"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
                         {sim.type === 'PREMIUM' && (<>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-tertiary/15 text-md-tertiary font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-tertiary/15 text-md-tertiary font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({sim.math.cedingFeePct?.toFixed(2)}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
                           <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-success/15 text-md-success font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
                         </>)}
                         <div className="flex justify-between font-bold text-xs pt-1.5 border-t surface-border text-md-primary"><span>= Net Distributable:</span><span>{fmt(sim.math.net)}</span></div>
@@ -645,7 +676,7 @@ function App() {
                             <Parties parties={[{ role: 'Ceding Co', name: front.name }, { role: 'Reinsured', name: leadIns.name }]}/>
                             {activeNow && sim.type === 'PREMIUM' && (
                               <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
-                                <div className="flex justify-between text-md-tertiary text-xs"><span>Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                                <div className="flex justify-between text-md-tertiary text-xs"><span>Ceding Fee ({sim.math.cedingFeePct?.toFixed(2)}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
                               </div>
                             )}
                             {activeNow && sim.type === 'CLAIM' && (
@@ -693,12 +724,12 @@ function App() {
                           <td className="px-4 py-3"><div className="font-mono text-xs text-md-primary">{tx.id}</div><div className="text-md-on-surface-variant text-[11px]">{tx.date}</div></td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              {tx.type === 'PREMIUM' ? <span className="bg-md-success/15 text-md-success text-[10px] font-bold px-2 py-0.5 rounded uppercase">Premium</span> : <span className="bg-md-error/15 text-md-error text-[10px] font-bold px-2 py-0.5 rounded uppercase">Claim</span>}
+                              {tx.type === 'PREMIUM' ? <span className="bg-md-success/15 text-md-success text-[10px] font-bold px-2 py-0.5 rounded uppercase">Premium</span> : <span className="bg-md-claim/15 text-md-claim text-[10px] font-bold px-2 py-0.5 rounded uppercase">Claim</span>}
                               <span className="font-medium text-md-on-surface-variant text-xs">{tx.country}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3 font-mono text-xs text-md-on-surface-variant">{tx.inwardId}</td>
-                          <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-md-success' : 'text-md-error'}`}>{fmt(tx.gross)}</td>
+                          <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-md-success' : 'text-md-claim'}`}>{fmt(tx.gross)}</td>
                           <td className="px-4 py-3 text-right font-bold font-mono bg-md-tertiary/5">{tx.cedingFee > 0 ? <span className="text-md-tertiary">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           <td className="px-4 py-3 text-right font-bold font-mono bg-md-success/5">{tx.mgaFee > 0 ? <span className="text-md-success">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           {(tx.insurerResults || []).map((ir, idx) => {
@@ -726,7 +757,7 @@ function App() {
                 <span className="font-bold text-md-on-surface text-base flex items-center gap-2"><Layers size={18}/> Master Policy</span>
                 <PolicyIdTag id={setup.masterPolicyId} size="lg"/>
               </div>
-              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {(() => { const lf = setup.leadFee || {}; return lf.mode === 'fixed' ? `\u20AC${lf.value} ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${lf.value}% ${lf.frequency === 'once' ? '(one-time)' : '(repeating)'}`; })()} &middot; Ceding Fee: {setup.cedingFeePct}%</div>
+              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {leadFeeConfig.mode === 'fixed' ? `\u20AC${leadFeeConfig.value} ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${leadFeeConfig.value}% ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}`} &middot; Ceding Fee: {cedingFeePct}% (min {fmt(minCedingFee)})</div>
               {ledgers.length > 0 && (
                 <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
