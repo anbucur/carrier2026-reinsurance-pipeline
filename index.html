@@ -171,6 +171,10 @@ const INS_COLORS = [
 ];
 
 const fmt = (val) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(val);
+const asNonNegativeNumber = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
+};
 
 const getGlow = (t) => t === 'PREMIUM' ? 'pulse-glow-green' : t === 'CLAIM' ? 'pulse-glow-claim' : 'pulse-glow-blue';
 
@@ -224,8 +228,9 @@ function App() {
   const setup = setups.find(s => s.id === activeSetupId) || setups[0];
   const outward = useMemo(() => getOutwardPolicies(setup), [setup]);
   const leadFeeConfig = { mode: 'percentage', frequency: 'repeating', value: 5, ...(setup.leadFee || {}) };
-  const cedingFeePct = Math.max(0, Number(setup.cedingFeePct) || 0);
-  const minCedingFee = Math.max(0, Number(setup.minCedingFee) || 0);
+  const leadFeeValue = asNonNegativeNumber(leadFeeConfig.value, 5);
+  const cedingFeePct = asNonNegativeNumber(setup.cedingFeePct);
+  const minCedingFee = asNonNegativeNumber(setup.minCedingFee);
   const totalShares = setup.insurers.reduce((s, i) => s + i.share, 0);
   const sharesValid = totalShares === 100;
   const isAnimating = sim.phase !== 'IDLE' && sim.phase !== 'COMPLETE';
@@ -290,8 +295,8 @@ function App() {
     const gross = simConfig.type === 'CLAIM' ? -rawAmount : rawAmount;
     let leadFeeAmt = 0, cedingFee = 0, net = gross;
     if (simConfig.type === 'PREMIUM') {
-      leadFeeAmt = leadFeeConfig.mode === 'percentage' ? gross * (Number(leadFeeConfig.value) / 100) : Number(leadFeeConfig.value) || 0;
-      const alreadyChargedOnce = leadFeeConfig.frequency === 'once' && sourceFront && ledgers.some(tx => tx.frontId === sourceFront.id && tx.mgaFee > 0);
+      leadFeeAmt = leadFeeConfig.mode === 'percentage' ? gross * (leadFeeValue / 100) : leadFeeValue;
+      const alreadyChargedOnce = leadFeeConfig.frequency === 'once' && sourceFront && ledgers.some(tx => tx.inwardId === sourceFront.inwardId && tx.mgaFee > 0);
       if (alreadyChargedOnce) leadFeeAmt = 0;
       const percentageFee = gross * (cedingFeePct / 100);
       cedingFee = Math.max(percentageFee, minCedingFee);
@@ -448,7 +453,7 @@ function App() {
                     </div>
                     <div>
                       <label className={LABEL}>{leadFeeConfig.mode === 'fixed' ? 'Fixed Amount (EUR)' : 'Percentage (%)'}</label>
-                      <input type="number" min="0" step="0.01" className={INPUT} value={leadFeeConfig.value ?? 5} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...leadFeeConfig, value: Number(e.target.value) })}/>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={leadFeeValue} onChange={e => updateSetup('leadFee', { mode: 'percentage', frequency: 'repeating', value: 5, ...leadFeeConfig, value: asNonNegativeNumber(e.target.value, 0) })}/>
                     </div>
                   </div>
                 </div>
@@ -462,11 +467,11 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className={LABEL}>Percentage (%)</label>
-                      <input type="number" min="0" step="0.01" className={INPUT} value={setup.cedingFeePct ?? 0} onChange={e => updateSetup('cedingFeePct', Number(e.target.value))}/>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={cedingFeePct} onChange={e => updateSetup('cedingFeePct', asNonNegativeNumber(e.target.value, 0))}/>
                     </div>
                     <div>
                       <label className={LABEL}>Minimum Fee (EUR)</label>
-                      <input type="number" min="0" step="0.01" className={INPUT} value={setup.minCedingFee ?? 0} onChange={e => updateSetup('minCedingFee', Number(e.target.value))}/>
+                      <input type="number" min="0" step="0.01" className={INPUT} value={minCedingFee} onChange={e => updateSetup('minCedingFee', asNonNegativeNumber(e.target.value, 0))}/>
                     </div>
                   </div>
                   <div className="mt-3 text-xs font-medium text-md-on-surface-variant">
@@ -757,7 +762,7 @@ function App() {
                 <span className="font-bold text-md-on-surface text-base flex items-center gap-2"><Layers size={18}/> Master Policy</span>
                 <PolicyIdTag id={setup.masterPolicyId} size="lg"/>
               </div>
-              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {leadFeeConfig.mode === 'fixed' ? `\u20AC${leadFeeConfig.value} ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${leadFeeConfig.value}% ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}`} &middot; Ceding Fee: {cedingFeePct}% (min {fmt(minCedingFee)})</div>
+              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {leadFeeConfig.mode === 'fixed' ? `\u20AC${leadFeeValue} ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${leadFeeValue}% ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}`} &middot; Ceding Fee: {cedingFeePct}% (min {fmt(minCedingFee)})</div>
               {ledgers.length > 0 && (
                 <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
