@@ -414,10 +414,10 @@ function App() {
                 <div><label className={LABEL}>Master Policy ID</label><input className={INPUT} value={setup.masterPolicyId} onChange={e => updateSetup('masterPolicyId', e.target.value)}/></div>
                 <div><label className={LABEL}>Min Ceding Fee (EUR)</label><input type="number" className={INPUT} value={setup.minCedingFee} onChange={e => updateSetup('minCedingFee', Number(e.target.value))}/></div>
               </div>
-              <div className="mt-4 p-4 rounded-xl border-2 bg-md-warn/10 border-md-warn/20">
+              <div className="mt-4 p-4 rounded-xl border-2 bg-md-tertiary/10 border-md-tertiary/20">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-sm font-bold text-md-warn">Lead Fee Configuration</span>
-                  {(() => { const lf = setup.leadFee || {}; const freq = lf.frequency === 'once' ? 'One-Time' : 'Repeating'; const mode = lf.mode === 'fixed' ? 'Fixed' : 'Percentage'; return <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-warn/15 text-md-warn">{mode} &middot; {freq}</span>; })()}
+                  <span className="text-sm font-bold text-md-tertiary">Lead Fee Configuration</span>
+                  {(() => { const lf = setup.leadFee || {}; const freq = lf.frequency === 'once' ? 'One-Time' : 'Repeating'; const mode = lf.mode === 'fixed' ? 'Fixed' : 'Percentage'; return <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-tertiary/15 text-md-tertiary">{mode} &middot; {freq}</span>; })()}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -573,17 +573,17 @@ function App() {
                 {/* ENGINE */}
                 <div className="flex flex-col justify-center">
                   <h3 className="text-center font-bold text-md-on-surface-variant uppercase tracking-[0.15em] text-[11px] mb-5">2. MGA Processing Engine</h3>
-                  <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-primary-bright/10 ${sim.phase === 'FEE_CALC' ? 'border-md-warn shadow-[0_0_24px_4px_rgba(251,191,36,0.15)]' : 'border-md-primary-bright/20'}`}>
+                  <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-primary-bright/10 ${sim.phase === 'FEE_CALC' ? 'border-md-tertiary shadow-[0_0_24px_4px_rgba(76,214,255,0.18)]' : 'border-md-primary-bright/20'}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-bold text-md-on-surface text-sm flex items-center gap-1.5"><Settings2 size={16} className="text-md-primary"/> Fee Calculation</div>
-                      {sim.phase === 'FEE_CALC' && <Activity size={16} className="text-md-warn animate-spin"/>}
+                      {sim.phase === 'FEE_CALC' && <Activity size={16} className="text-md-tertiary animate-spin"/>}
                     </div>
                     <div className="text-[11px] text-md-on-surface-variant font-medium mb-2">{sim.phase !== 'IDLE' ? `${selectedFront?.country || ''} — ${selectedFront?.name || ''}` : 'Awaiting booking...'}</div>
                     {showCalc && (
                       <div className="space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
                         <div className="flex justify-between text-md-on-surface-variant text-xs pb-1 border-b surface-border-soft"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
                         {sim.type === 'PREMIUM' && (<>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-warn/15 text-md-warn font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-tertiary/15 text-md-tertiary font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
                           <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-emerald-500/15 text-emerald-400 font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
                         </>)}
                         <div className="flex justify-between font-bold text-xs pt-1.5 border-t surface-border text-md-primary"><span>= Net Distributable:</span><span>{fmt(sim.math.net)}</span></div>
@@ -636,16 +636,16 @@ function App() {
                       const activeNow = isTarget && showResults;
                       return (
                         <div key={front.id} className={`${!isTarget && sim.phase !== 'IDLE' ? 'dimmed-inactive' : ''}`}>
-                           <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-warn/10 border-md-warn/20 ${activeNow && !isDone ? `active-pop ${getGlow(sim.type)}` : ''}`}>
+                           <div className={`border-2 rounded-xl p-4 relative transition-all bg-md-tertiary/10 border-md-tertiary/20 ${activeNow && !isDone ? `active-pop ${getGlow(sim.type)}` : ''}`}>
                              <div className="flex items-center justify-between mb-1">
-                               <span className="font-bold text-md-warn text-sm flex items-center gap-1.5"><Globe size={14}/> {front.name}</span>
-                               <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-warn/15 text-md-warn">{front.country}</span>
+                               <span className="font-bold text-md-tertiary text-sm flex items-center gap-1.5"><Globe size={14}/> {front.name}</span>
+                               <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-tertiary/15 text-md-tertiary">{front.country}</span>
                              </div>
                             <div className="text-[11px] text-md-on-surface-variant font-medium mb-2">Local Front — Ceding Commission</div>
                             <Parties parties={[{ role: 'Ceding Co', name: front.name }, { role: 'Reinsured', name: leadIns.name }]}/>
                             {activeNow && sim.type === 'PREMIUM' && (
                               <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
-                                <div className="flex justify-between text-md-warn text-xs"><span>Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
+                                <div className="flex justify-between text-md-tertiary text-xs"><span>Ceding Fee ({setup.cedingFeePct}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
                               </div>
                             )}
                             {activeNow && sim.type === 'CLAIM' && (
@@ -676,8 +676,8 @@ function App() {
                       <th className="px-4 py-3 text-md-on-surface-variant text-[11px] uppercase tracking-wider">Type</th>
                       <th className="px-4 py-3 text-md-on-surface-variant text-[11px] uppercase tracking-wider">Inward</th>
                       <th className="px-4 py-3 text-right text-md-on-surface-variant text-[11px] uppercase tracking-wider">Gross</th>
-                      <th className="px-4 py-3 text-right text-md-warn text-[11px] uppercase tracking-wider">Ceding</th>
-                      <th className="px-4 py-3 text-right text-md-warn text-[11px] uppercase tracking-wider">Lead</th>
+                      <th className="px-4 py-3 text-right text-md-tertiary text-[11px] uppercase tracking-wider">Ceding</th>
+                      <th className="px-4 py-3 text-right text-emerald-400 text-[11px] uppercase tracking-wider">Lead</th>
                       {setup.insurers.map((ins, idx) => {
                         const col = INS_COLORS[idx % INS_COLORS.length];
                         return <th key={ins.id} className={`px-4 py-3 text-right ${col.header} text-[11px] uppercase tracking-wider`}>{ins.name} ({ins.share}%)</th>;
@@ -699,7 +699,7 @@ function App() {
                           </td>
                           <td className="px-4 py-3 font-mono text-xs text-md-on-surface-variant">{tx.inwardId}</td>
                           <td className={`px-4 py-3 text-right font-black font-mono ${tx.type === 'PREMIUM' ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(tx.gross)}</td>
-                          <td className="px-4 py-3 text-right font-bold font-mono bg-md-warn/5">{tx.cedingFee > 0 ? <span className="text-md-warn">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
+                          <td className="px-4 py-3 text-right font-bold font-mono bg-md-tertiary/5">{tx.cedingFee > 0 ? <span className="text-md-tertiary">{fmt(tx.cedingFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           <td className="px-4 py-3 text-right font-bold font-mono bg-emerald-500/5">{tx.mgaFee > 0 ? <span className="text-emerald-400">{fmt(tx.mgaFee)}</span> : <span className="text-md-outline-variant">—</span>}</td>
                           {(tx.insurerResults || []).map((ir, idx) => {
                             const col = INS_COLORS[idx % INS_COLORS.length];
@@ -730,7 +730,7 @@ function App() {
               {ledgers.length > 0 && (
                 <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
-                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding</div><div className="text-xs font-bold text-md-warn">{fmt(ledgerTotals.masterCeding)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding</div><div className="text-xs font-bold text-md-tertiary">{fmt(ledgerTotals.masterCeding)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-emerald-400">{fmt(ledgerTotals.masterLeadFee)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Net</div><div className="text-xs font-bold text-md-primary">{fmt(ledgerTotals.masterNet)}</div></div>
                 </div>
@@ -786,7 +786,7 @@ function App() {
                           {ledgers.length > 0 && (() => { const lt = ledgerTotals.byFront[front.id]; return (
                             <div className="mt-2 grid grid-cols-2 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.gross)}</div></div>
-                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding Fee</div><div className="text-xs font-bold text-md-warn">{fmt(lt.ceding)}</div></div>
+                              <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding Fee</div><div className="text-xs font-bold text-md-tertiary">{fmt(lt.ceding)}</div></div>
                             </div>
                           ); })()}
                         </div>
