@@ -322,7 +322,7 @@ function App() {
       t = setTimeout(() => {
         const front = setup.localFronts.find(f => f.id === sim.countryId);
         if (!front) return;
-        setLedgers(prev => [{ id: `TXN-${Math.floor(Math.random()*90000)+10000}`, date: new Date().toLocaleTimeString(), type: sim.type, country: front.country, frontId: front.id, frontName: front.name, inwardId: front.inwardId, ...sim.math }, ...prev]);
+        setLedgers(prev => [{ id: `TXN-${Math.floor(Math.random()*90000)+10000}`, date: new Date().toLocaleTimeString(), type: sim.type, country: front.country, frontName: front.name, inwardId: front.inwardId, ...sim.math }, ...prev]);
         setSim(p => ({ ...p, phase: 'COMPLETE' }));
       }, 2000);
     }
