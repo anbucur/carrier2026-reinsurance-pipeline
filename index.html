@@ -304,12 +304,16 @@ function App() {
       net = gross - leadFeeAmt - cedingFee;
     }
     const leadFeePct = gross > 0 ? (leadFeeAmt / gross * 100) : 0;
+    const outwardPolicyByInsurerId = outward.reduce((acc, o) => {
+      if (o.frontId === simConfig.countryId) acc[o.insurerId] = o.id;
+      return acc;
+    }, {});
     const insurerResults = setup.insurers.map(ins => {
       const isLead = ins.id === setup.leadInsurerId;
       const amt = net * (ins.share / 100);
       const allocatedPolicyId = isLead
         ? sourceInwardId
-        : (outward.find(o => o.frontId === simConfig.countryId && o.insurerId === ins.id)?.id || null);
+        : (outwardPolicyByInsurerId[ins.id] || null);
       return { id: ins.id, name: ins.name, isLead, allocatedPolicyId, sharePct: ins.share, amount: amt, total: isLead ? amt + leadFeeAmt : amt };
     });
     setSim({ phase: 'INWARD', type: simConfig.type, countryId: simConfig.countryId, amount: gross, math: { gross, mgaFee: leadFeeAmt, cedingFee, net, insurerResults, sourceInwardId, leadFeePct, cedingFeePct, minCedingFee } });
@@ -649,7 +653,7 @@ function App() {
                           <div className="flex items-center justify-between mb-1">
                             <span className={`font-bold text-sm ${col.accent} flex items-center gap-1.5`}><Building2 size={14}/> {ins.name}{isLead ? ' (Lead)' : ''}</span>
                             {displayPolicyId && <PolicyIdTag id={displayPolicyId}/>}
-                            {isLead && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Paid directly via {displayPolicyId || 'inward policy'}</span>}
+                            {isLead && displayPolicyId && <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary-bright/15 text-md-primary">Paid directly via {displayPolicyId}</span>}
                           </div>
                           <div className="flex items-center justify-between mb-2">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded ${col.badge}`}>{ins.share}% Risk</span>
