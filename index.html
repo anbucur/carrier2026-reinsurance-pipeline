@@ -431,7 +431,7 @@ function App() {
               <div className="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border-2 bg-md-primary/10 border-md-primary/20">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-sm font-bold text-md-primary">Lead Fee Configuration</span>
+                    <span className="text-sm font-bold text-md-primary">Fronting Fee Configuration</span>
                     <span className="text-[10px] font-black px-2 py-0.5 rounded bg-md-primary/15 text-md-primary">
                       {leadFeeConfig.mode === 'fixed' ? 'Fixed' : 'Percentage'} &middot; {leadFeeConfig.frequency === 'once' ? 'One-Time' : 'Repeating'}
                     </span>
@@ -620,7 +620,7 @@ function App() {
                         <div className="flex justify-between text-md-on-surface-variant text-xs pb-1 border-b surface-border-soft"><span>Gross {sim.type}:</span><span className="font-bold text-md-on-surface">{fmt(sim.math.gross)}</span></div>
                         {sim.type === 'PREMIUM' && (<>
                           <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-tertiary/15 text-md-tertiary font-bold' : 'text-md-on-surface-variant'}`}><span>- Ceding Fee ({sim.math.cedingFeePct?.toFixed(2)}%):</span><span className="font-bold">{fmt(sim.math.cedingFee)}</span></div>
-                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-success/15 text-md-success font-bold' : 'text-md-on-surface-variant'}`}><span>- Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
+                          <div className={`flex justify-between p-1 rounded text-xs ${sim.phase === 'FEE_CALC' ? 'bg-md-success/15 text-md-success font-bold' : 'text-md-on-surface-variant'}`}><span>- Fronting Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>
                         </>)}
                         <div className="flex justify-between font-bold text-xs pt-1.5 border-t surface-border text-md-primary"><span>= Net Distributable:</span><span>{fmt(sim.math.net)}</span></div>
                       </div>
@@ -655,7 +655,7 @@ function App() {
                           {showResults && ir && (
                             <div className="mt-1 space-y-1 font-mono bg-md-surface/80 p-2.5 rounded-lg border surface-border-soft">
                               <div className="flex justify-between text-md-on-surface-variant text-xs"><span>Risk Share:</span><span className="font-bold text-md-on-surface">{fmt(ir.amount)}</span></div>
-                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-md-success text-xs"><span>Lead Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
+                              {isLead && sim.type === 'PREMIUM' && <div className="flex justify-between text-md-success text-xs"><span>Fronting Fee ({sim.math.leadFeePct?.toFixed(1)}%):</span><span className="font-bold">{fmt(sim.math.mgaFee)}</span></div>}
                               <div className="flex justify-between font-bold text-xs pt-1 border-t surface-border text-md-on-surface"><span>Total:</span><span>{fmt(ir.total)}</span></div>
                             </div>
                           )}
@@ -762,12 +762,12 @@ function App() {
                 <span className="font-bold text-md-on-surface text-base flex items-center gap-2"><Layers size={18}/> Master Policy</span>
                 <PolicyIdTag id={setup.masterPolicyId} size="lg"/>
               </div>
-              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Lead Fee: {leadFeeConfig.mode === 'fixed' ? `\u20AC${leadFeeValue} ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${leadFeeValue}% ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}`} &middot; Ceding Fee: {cedingFeePct}% (min {fmt(minCedingFee)})</div>
+              <div className="text-sm text-md-on-surface-variant">{setup.carrierName} &middot; Fronting Fee: {leadFeeConfig.mode === 'fixed' ? `\u20AC${leadFeeValue} ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}` : `${leadFeeValue}% ${leadFeeConfig.frequency === 'once' ? '(one-time)' : '(repeating)'}`} &middot; Ceding Fee: {cedingFeePct}% (min {fmt(minCedingFee)})</div>
               {ledgers.length > 0 && (
                 <div className="mt-2 grid grid-cols-4 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Gross</div><div className="text-xs font-bold text-md-on-surface">{fmt(ledgerTotals.masterGross)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Ceding</div><div className="text-xs font-bold text-md-tertiary">{fmt(ledgerTotals.masterCeding)}</div></div>
-                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-md-success">{fmt(ledgerTotals.masterLeadFee)}</div></div>
+                  <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Fronting Fee</div><div className="text-xs font-bold text-md-success">{fmt(ledgerTotals.masterLeadFee)}</div></div>
                   <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Net</div><div className="text-xs font-bold text-md-primary">{fmt(ledgerTotals.masterNet)}</div></div>
                 </div>
               )}
@@ -793,7 +793,7 @@ function App() {
                           {ledgers.length > 0 && (() => { const lt = ledgerTotals.byInsurer[ins.id]; return (
                             <div className="mt-2 grid grid-cols-3 gap-2 font-mono bg-md-surface/80 p-2 rounded-lg border surface-border-soft">
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Risk Share</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.amount)}</div></div>
-                              {isLead && <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Lead Fee</div><div className="text-xs font-bold text-md-success">{fmt(lt.leadFee)}</div></div>}
+                              {isLead && <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Fronting Fee</div><div className="text-xs font-bold text-md-success">{fmt(lt.leadFee)}</div></div>}
                               <div className="text-center"><div className="text-[9px] text-md-on-surface-variant uppercase">Total</div><div className="text-xs font-bold text-md-on-surface">{fmt(lt.total)}</div></div>
                             </div>
                           ); })()}
@@ -880,7 +880,7 @@ function App() {
                 </div>
                 <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-3">
                   <div className="text-xs font-black text-violet-300 uppercase tracking-wide">Lead Reinsurer</div>
-                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier on the master policy that also receives the lead fee.</div>
+                  <div className="text-xs text-md-on-surface-variant mt-1">Primary carrier on the master policy that also receives the fronting fee.</div>
                 </div>
                 <div className="rounded-lg border border-teal-500/25 bg-teal-500/10 p-3">
                   <div className="text-xs font-black text-teal-300 uppercase tracking-wide">Co-insurer</div>
@@ -895,7 +895,7 @@ function App() {
                   <div className="text-xs text-md-on-surface-variant mt-1">Party accepting risk from the retrocedant under outward policy terms.</div>
                 </div>
                 <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3">
-                  <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">Lead Fee</div>
+                  <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">Fronting Fee</div>
                   <div className="text-xs text-md-on-surface-variant mt-1">Fee paid to the lead reinsurer, configurable as percentage or fixed, repeating or one-time.</div>
                 </div>
                 <div className="rounded-lg border border-sky-500/25 bg-sky-500/10 p-3">

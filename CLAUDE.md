@@ -13,7 +13,7 @@ Self-contained HTML dashboard simulating a reinsurance pipeline for "CARRIER 202
 - **Pipeline flow**: Inward Policy → MGA Engine (fee calc) → Distribution (insurers + local fronts)
 - **Lead Insurer**: configurable via dropdown, absorbs risk directly from Master Policy
 - **Co-insurers**: receive risk via outward policies (retrocession)
-- **Lead Fee**: 4 modes — percentage/fixed × repeating/one-time
+- **Fronting Fee**: 4 modes — percentage/fixed × repeating/one-time
 - **Ceding Fee**: percentage with minimum floor
 - **Party roles**: Ceding Company, Reinsured, Lead Reinsurer, Co-insurer, Retrocedant, Retrocessionaire
 
